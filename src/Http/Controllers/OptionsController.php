@@ -33,6 +33,22 @@ class OptionsController extends Controller
         ];
     }
 
+    public function search(NovaRequest $request)
+    {
+        $attribute = $request->input('attribute');
+
+        if ($request->input('action')) {
+            $field = $this->getFieldFromAction($request, $attribute);
+        }
+        else {
+            $field = $this->getFieldFromResource($request, $attribute);
+        }
+
+        abort_if(is_null($field), 400);
+
+        return $field->getOptions(['search' => $request->input('search')]);
+    }
+
     private function getFieldFromResource(NovaRequest $request, $attribute) {
         $resource = $request->newResource();
 

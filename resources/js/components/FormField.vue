@@ -14,7 +14,9 @@
                 :deselectLabel="field.deselectLabel"
                 :selectedLabel="field.selectedLabel"
                 :loading="isLoading"
-                @input="onChange">
+                @input="onChange"
+                :internal-search="false"
+                @search-change="onSearchChange">
             </multiselect>
         </template>
     </default-field>
@@ -34,7 +36,8 @@ export default {
         return {
             isLoading: false,
             defaultValue: null,
-            options: []
+            options: [],
+            timeout: null,
         };
     },
 
@@ -171,6 +174,25 @@ export default {
             if (!this.value && this.defaultValue) {
                 this.value = this.defaultValue;
             }
+        },
+
+        onSearchChange(value) {
+            if (this.timeout) {
+                clearTimeout(this.timeout);
+            }
+            this.timeout = setTimeout(() => {
+                this.isLoading = true;
+                const attribute = this.field.originalAttribute ? this.field.originalAttribute : this.removeFlexibleContentPrefix(this.field.attribute);
+                Nova.request().get('/nova-vendor/dynamic-select/options/'+this.resourceName+
+                    '?search='+value+
+                    '&attribute='+attribute
+                    //'&action='+this.field.action
+                ).then((resp) => {
+                    console.log('response', resp)
+                    this.isLoading = false;
+                    this.options = resp.data;
+                });
+            }, 700);
         }
     },
 }
